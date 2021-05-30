@@ -181,7 +181,7 @@ class ObjectToGraphQL implements HasObjectToGraphQLConstants
    * @param ReflectionProperty $property
    * @return Type
    */
-  private function wrapNull(Type|Closure $type, ReflectionProperty $property, ?GraphQLType $graphQLType = null): Type
+  private function wrapNull(Type | Closure $type, ReflectionProperty $property, ?GraphQLType $graphQLType = null): Type
   {
     $allowsNull = $graphQLType?->allowsNull === true || ($property->getType()?->allowsNull() ?? true);
 
