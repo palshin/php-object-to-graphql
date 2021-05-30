@@ -1,39 +1,64 @@
-# :package_description
+# ObjectToGraphQL
 
-[![Latest Version on Packagist](https://img.shields.io/packagist/v/vendor_slug/package_slug.svg?style=flat-square)](https://packagist.org/packages/vendor_slug/package_slug)
-[![GitHub Tests Action Status](https://img.shields.io/github/workflow/status/vendor_slug/package_slug/run-tests?label=tests)](https://github.com/vendor_slug/package_slug/actions?query=workflow%3ATests+branch%3Amaster)
-[![GitHub Code Style Action Status](https://img.shields.io/github/workflow/status/vendor_slug/package_slug/Check%20&%20fix%20styling?label=code%20style)](https://github.com/vendor_slug/package_slug/actions?query=workflow%3A"Check+%26+fix+styling"+branch%3Amaster)
-[![Total Downloads](https://img.shields.io/packagist/dt/vendor_slug/package_slug.svg?style=flat-square)](https://packagist.org/packages/vendor_slug/package_slug)
+[![Latest Version on Packagist](https://img.shields.io/packagist/v/palshin/object_to_graphql.svg?style=flat-square)](https://packagist.org/packages/palshin/object_to_graphql)
+[![GitHub Tests Action Status](https://img.shields.io/github/workflow/status/palshin/object_to_graphql/run-tests?label=tests)](https://github.com/palshin/object_to_graphql/actions?query=workflow%3ATests+branch%3Amaster)
+[![GitHub Code Style Action Status](https://img.shields.io/github/workflow/status/palshin/object_to_graphql/Check%20&%20fix%20styling?label=code%20style)](https://github.com/palshin/object_to_graphql/actions?query=workflow%3A"Check+%26+fix+styling"+branch%3Amaster)
+[![Total Downloads](https://img.shields.io/packagist/dt/palshin/object_to_graphql.svg?style=flat-square)](https://packagist.org/packages/palshin/object_to_graphql)
 
-[](delete) 1) manually replace `:author_name, :author_username, auhor@domain.com, :vendor_name, vendor_slug, Vendor Name, :package_name, package_slug, skeleton, Skeleton, :package_description` with their correct values
-[](delete) in `CHANGELOG.md LICENSE.md README.md composer.json SkeletonClass.php ExampleTest.php FUNDING.yml config.yml SECURITY.md`
-[](delete) and delete `configure-skeleton.sh`
-
-[](delete) 2) You can also run `./configure-skeleton.sh` to do this automatically.
-
-This is where your description should go. Try and limit it to a paragraph or two. Consider adding a small example.
-
-## Support us
-
-[<img src="https://github-ads.s3.eu-central-1.amazonaws.com/package-skeleton-php.jpg?t=1" width="419px" />](https://spatie.be/github-ad-click/package-skeleton-php)
-
-We invest a lot of resources into creating [best in class open source packages](https://spatie.be/open-source). You can support us by [buying one of our paid products](https://spatie.be/open-source/support-us).
-
-We highly appreciate you sending us a postcard from your hometown, mentioning which of our package(s) you are using. You'll find our address on [our contact page](https://spatie.be/about-us). We publish all received postcards on [our virtual postcard wall](https://spatie.be/open-source/postcards).
+I noticed that in my own code (I use [Lighthouse PHP](https://github.com/nuwave/lighthouse) for implementation GraphQL API) quite often I first describe the input type in the schema, then I describe the object for this type (DTO). It creates a sense of repetition and makes type system maintenance more difficult, so I decided to add the ability to programmatically generate types for the schema by its type declaration in code. So in my project I expanded [this recommendation](https://lighthouse-php.com/5/digging-deeper/adding-types-programmatically.html#native-php-types) for third case: DTO for custom resolvers.
 
 ## Installation
 
 You can install the package via composer:
 
 ```bash
-composer require vendor_slug/package_slug
+composer require epalshin/object-to-graphql
 ```
 
 ## Usage
 
 ```php
-$skeleton = new VendorName\Skeleton();
-echo $skeleton->echoPhrase('Hello, VendorName!');
+
+use Palshin\ObjectToGraphQL;
+use Palshin\ObjectToGraphQL\Attributes\GraphQLArrayType;
+use Palshin\ObjectToGraphQL\Attributes\GraphQLTypeCategory;
+
+#[GraphQLTypeCategory(ObjectToGraphQL::INPUT)]
+class ProductCreateDTO {
+  public string $name;
+
+  public string $description;
+
+  public float $price;
+
+  public int $categoryId;
+  
+  public bool $isPublic;
+
+  #[GraphQLArrayType(ObjectToGraphQL::STRING)]
+  public array $photoUrls;
+
+  public ?ProductCategoryCreateDTO $category;
+}
+
+[ $productCreateDto, $productCategoryCreateDto ] = ObjectToGraphQL::getObjectType(ProductCreateDTO::class);
+
+// and now you can register $objectType in your schema
+$mutationType = new ObjectType([
+  'name' => 'Mutation',
+  'fields' => [
+    'productCreate' => [
+      'type' => $product,
+      'args' => [
+        'input' => $productCreateDto,
+      ],
+      'resolve' => function($rootValue, $args) {
+        // TODO
+      }
+    ]
+  ]
+]);
+
 ```
 
 ## Testing
@@ -56,8 +81,12 @@ Please review [our security policy](../../security/policy) on how to report secu
 
 ## Credits
 
-- [:author_name](https://github.com/:author_username)
+- [Eugene Palshin](https://github.com/palshin)
 - [All Contributors](../../contributors)
+
+## TODO
+- [ ] Add cyclic addition of types to schema
+- [ ] Add custom exceptions
 
 ## License
 
