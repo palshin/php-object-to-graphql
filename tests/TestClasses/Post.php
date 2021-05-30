@@ -11,6 +11,4 @@ class Post
   public string $title;
 
   public string $content;
-
-  public User $author;
 }

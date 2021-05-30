@@ -148,7 +148,7 @@ class ObjectToGraphQL implements HasObjectToGraphQLConstants
       $scalarType = $scalarTypeAttribute->newInstance();
       $typeInstance = $this->getTypeInstanceForScalar($scalarType->typeClass);
 
-      return $this->wrapNull($typeInstance, $scalarType, $property);
+      return $this->wrapNull($typeInstance, $property, $scalarType);
     }
 
     $arrayTypeAttribute = $property->getAttributes(GraphQLArrayType::class)[0] ?? null;
@@ -157,7 +157,7 @@ class ObjectToGraphQL implements HasObjectToGraphQLConstants
       $typeInstance = $this->getTypeInstanceForNamedType($arrayType->getScalarType()->typeClass);
       $type = $arrayType->getScalarType()->allowsNull ? $typeInstance : Type::nonNull($typeInstance);
 
-      return $this->wrapNull(Type::listOf($type), $arrayType, $property);
+      return $this->wrapNull(Type::listOf($type), $property, $arrayType);
     }
 
     $type = $property->getType();
@@ -166,7 +166,7 @@ class ObjectToGraphQL implements HasObjectToGraphQLConstants
     if ($type instanceof ReflectionNamedType) {
       $typeInstance = $this->getTypeInstanceForNamedType($type->getName());
 
-      return $type->allowsNull() ? $typeInstance : Type::nonNull($typeInstance);
+      return $this->wrapNull($typeInstance, $property);
     }
 
     // third case: we have union type declaration
@@ -181,9 +181,9 @@ class ObjectToGraphQL implements HasObjectToGraphQLConstants
    * @param ReflectionProperty $property
    * @return Type
    */
-  private function wrapNull(Type $type, GraphQLType $graphQLType, ReflectionProperty $property): Type
+  private function wrapNull(Type|Closure $type, ReflectionProperty $property, ?GraphQLType $graphQLType = null): Type
   {
-    $allowsNull = $graphQLType->allowsNull === true || ($property->getType()?->allowsNull() ?? true);
+    $allowsNull = $graphQLType?->allowsNull === true || ($property->getType()?->allowsNull() ?? true);
 
     return $allowsNull ? $type : Type::nonNull($type);
   }
