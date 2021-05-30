@@ -44,12 +44,16 @@ class ObjectTypesUseCaseTest extends TestCase
    */
   public function type_definitions_match(): void
   {
+    $userInput = null;
+    $postInput = null;
+
     $postInput = new InputObjectType([
       'name' => 'PostInput',
       'fields' => [
         'id' => Type::nonNull(Type::int()),
         'title' => Type::nonNull(Type::string()),
         'content' => type::nonNull(Type::string()),
+        'author' => Type::nonNull(fn () => $userInput),
       ],
     ]);
 
