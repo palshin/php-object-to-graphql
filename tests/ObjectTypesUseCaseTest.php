@@ -15,7 +15,7 @@ class ObjectTypesUseCaseTest extends TestCase
   public function type_with_object_can_be_represented(): InputObjectType
   {
     $objectToGraphQL = new ObjectToGraphQL();
-    $objectType = $objectToGraphQL->getObjectType(User::class);
+    $objectType = array_values($objectToGraphQL->getObjectTypes(User::class))[0];
 
     $this->assertSame('UserInput', $objectType->name);
 

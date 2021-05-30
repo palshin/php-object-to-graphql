@@ -17,7 +17,7 @@ class ScalarTypesUseCaseTest extends TestCase
     /**
      * @var InputObjectType $objectType
      */
-    $objectType = $objectToGraphQL->getObjectType(ScalarClass::class);
+    $objectType = array_values($objectToGraphQL->getObjectTypes(ScalarClass::class))[0];
     $this->assertSame('ScalarClassInput', $objectType->name);
 
     return $objectType;

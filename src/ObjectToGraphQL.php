@@ -25,7 +25,6 @@ use ReflectionException;
 use ReflectionNamedType;
 use ReflectionProperty;
 use ReflectionUnionType;
-use Symfony\Component\Console\Input\Input;
 
 class ObjectToGraphQL implements HasObjectToGraphQLConstants
 {
@@ -57,10 +56,21 @@ class ObjectToGraphQL implements HasObjectToGraphQLConstants
   }
 
   /**
-   * @return array<ObjectType|InputObjectType>
+   * @param class-string|object $objectOrClass
+   * @return array<string, ObjectType|InputObjectType>
+   * @throws ReflectionException
+   * @throws Exception
    */
   public function getObjectTypes(string | object $objectOrClass): array
   {
+    $this->getObjectType($objectOrClass);
+
+    /**
+     * @psalm-var array<string, ObjectType|InputObjectType> $typeInstances
+     */
+    $typeInstances = $this->typeInstances;
+
+    return $typeInstances;
   }
 
   /**
@@ -72,7 +82,7 @@ class ObjectToGraphQL implements HasObjectToGraphQLConstants
    * @throws ReflectionException
    * @throws Exception
    */
-  public function getObjectType(string | object $objectOrClass): ObjectType | InputObjectType | Closure
+  private function getObjectType(string | object $objectOrClass): ObjectType | InputObjectType | Closure
   {
     $reflection = new ReflectionClass($objectOrClass);
     $objectType = $reflection->getAttributes(GraphQLObjectType::class)[0] ?? null;
