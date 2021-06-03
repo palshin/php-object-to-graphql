@@ -7,11 +7,10 @@ namespace Palshin\ObjectToGraphQL\Attributes;
 use Attribute;
 
 #[Attribute(Attribute::TARGET_PROPERTY)]
-class GraphQLScalarType
+class GraphQLUnionType
 {
   public function __construct(
-    public string $typeName,
-    public ?bool $allowsNull = null,
+    public string $name,
   ) {
   }
 }

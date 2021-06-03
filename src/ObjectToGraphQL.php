@@ -6,20 +6,15 @@ namespace Palshin\ObjectToGraphQL;
 
 use Closure;
 use Exception;
-use GraphQL\Type\Definition\BooleanType;
-use GraphQL\Type\Definition\FloatType;
-use GraphQL\Type\Definition\IDType;
 use GraphQL\Type\Definition\InputObjectType;
-use GraphQL\Type\Definition\IntType;
-use GraphQL\Type\Definition\NullableType;
 use GraphQL\Type\Definition\ObjectType;
 use GraphQL\Type\Definition\ScalarType;
-use GraphQL\Type\Definition\StringType;
 use GraphQL\Type\Definition\Type;
+use GraphQL\Type\Definition\UnionType;
 use Palshin\ObjectToGraphQL\Attributes\GraphQLArrayType;
 use Palshin\ObjectToGraphQL\Attributes\GraphQLObjectType;
 use Palshin\ObjectToGraphQL\Attributes\GraphQLScalarType;
-use Palshin\ObjectToGraphQL\Attributes\GraphQLType;
+use Palshin\ObjectToGraphQL\Attributes\GraphQLUnionType;
 use ReflectionClass;
 use ReflectionException;
 use ReflectionNamedType;
@@ -35,7 +30,7 @@ class ObjectToGraphQL implements HasObjectToGraphQLConstants
   ];
 
   /**
-   * @var array<string, ObjectType|InputObjectType|null>
+   * @var array<string, ObjectType|InputObjectType|UnionType|null>
    */
   public array $typeInstances = [];
 
@@ -57,20 +52,18 @@ class ObjectToGraphQL implements HasObjectToGraphQLConstants
 
   /**
    * @param class-string|object $objectOrClass
-   * @return array<string, ObjectType|InputObjectType>
+   * @psalm-return array<string, ObjectType|InputObjectType|UnionType>
    * @throws ReflectionException
    * @throws Exception
    */
-  public function getObjectTypes(string | object $objectOrClass): array
+  public function getObjectTypes(string|object $objectOrClass): array
   {
     $this->getObjectType($objectOrClass);
 
     /**
-     * @psalm-var array<string, ObjectType|InputObjectType> $typeInstances
+     * @psalm-var array<string, ObjectType|InputObjectType> $this- >typeInstances
      */
-    $typeInstances = $this->typeInstances;
-
-    return $typeInstances;
+    return $this->typeInstances;
   }
 
   /**
@@ -82,13 +75,13 @@ class ObjectToGraphQL implements HasObjectToGraphQLConstants
    * @throws ReflectionException
    * @throws Exception
    */
-  private function getObjectType(string | object $objectOrClass): ObjectType | InputObjectType | Closure
+  private function getObjectType(string|object $objectOrClass): ObjectType|InputObjectType|Closure
   {
     $reflection = new ReflectionClass($objectOrClass);
     $objectType = $reflection->getAttributes(GraphQLObjectType::class)[0] ?? null;
     $name = $objectType?->newInstance()?->name;
     $typeName = $this->getTypeName($objectOrClass, $name, $this->typeCategory);
-    // for cyclic dependecies use deferred field definition, by returning closure
+    // for cyclic dependencies use deferred field definition, by returning closure
     if (array_key_exists($typeName, $this->typeInstances)) {
       return $this->typeInstances[$typeName] ?? fn () => $this->typeInstances[$typeName];
     }
@@ -122,7 +115,7 @@ class ObjectToGraphQL implements HasObjectToGraphQLConstants
    * @return string
    */
   private function getTypeName(
-    string | object $objectOrClass,
+    string|object $objectOrClass,
     ?string $name = null,
     string $typeCategory = self::TYPE_CATEGORY_INPUT
   ): string {
@@ -145,19 +138,25 @@ class ObjectToGraphQL implements HasObjectToGraphQLConstants
     // first case: we have attribute with property definition, so it has highest priority
     $scalarTypeAttribute = $property->getAttributes(GraphQLScalarType::class)[0] ?? null;
     if ($scalarTypeAttribute) {
+      /**
+       * @var GraphQLScalarType $scalarType
+       */
       $scalarType = $scalarTypeAttribute->newInstance();
-      $typeInstance = $this->getTypeInstanceForScalar($scalarType->typeClass);
+      $typeInstance = $this->getTypeInstanceForScalar($scalarType->typeName);
 
-      return $this->wrapNull($typeInstance, $property, $scalarType);
+      return ObjectToGraphQLHelper::wrapNull($typeInstance, $property, $scalarType);
     }
 
     $arrayTypeAttribute = $property->getAttributes(GraphQLArrayType::class)[0] ?? null;
     if ($arrayTypeAttribute) {
+      /**
+       * @var GraphQLArrayType $arrayType
+       */
       $arrayType = $arrayTypeAttribute->newInstance();
-      $typeInstance = $this->getTypeInstanceForNamedType($arrayType->getScalarType()->typeClass);
+      $typeInstance = $this->getTypeInstanceForNamedType($arrayType->getScalarType()->typeName);
       $type = $arrayType->getScalarType()->allowsNull ? $typeInstance : Type::nonNull($typeInstance);
 
-      return $this->wrapNull(Type::listOf($type), $property, $arrayType);
+      return ObjectToGraphQLHelper::wrapNull(Type::listOf($type), $property, $arrayType);
     }
 
     $type = $property->getType();
@@ -166,26 +165,31 @@ class ObjectToGraphQL implements HasObjectToGraphQLConstants
     if ($type instanceof ReflectionNamedType) {
       $typeInstance = $this->getTypeInstanceForNamedType($type->getName());
 
-      return $this->wrapNull($typeInstance, $property);
+      return ObjectToGraphQLHelper::wrapNull($typeInstance, $property);
     }
 
     // third case: we have union type declaration
     if ($type instanceof ReflectionUnionType) {
-      var_dump($type->getTypes());
+      $unionTypeAttribute = $property->getAttributes(GraphQLUnionType::class)[0] ?? null;
+      if ($unionTypeAttribute) {
+        /**
+         * @var GraphQLUnionType $unionType
+         */
+        $unionType = $unionTypeAttribute->newInstance();
+        $typeInstance = new UnionType([
+          'name' => $unionType->name,
+          'types' => array_map(
+            fn (ReflectionNamedType $type) => $this->getTypeInstanceForNamedType($type->getName()),
+            ObjectToGraphQLHelper::filterNullType($type->getTypes()),
+          )
+        ]);
+        $this->typeInstances[$unionType->name] = $typeInstance;
+        return ObjectToGraphQLHelper::hasNullTypeInUnion($type->getTypes())
+          ? $typeInstance
+          : Type::nonNull($typeInstance);
+      }
     }
-  }
-
-  /**
-   * @param (NullableType&Type) $type
-   * @param GraphQLType $graphQLType
-   * @param ReflectionProperty $property
-   * @return Type
-   */
-  private function wrapNull(Type | Closure $type, ReflectionProperty $property, ?GraphQLType $graphQLType = null): Type
-  {
-    $allowsNull = $graphQLType?->allowsNull === true || ($property->getType()?->allowsNull() ?? true);
-
-    return $allowsNull ? $type : Type::nonNull($type);
+    dd($property->getType());
   }
 
   /**
@@ -194,9 +198,9 @@ class ObjectToGraphQL implements HasObjectToGraphQLConstants
    * @return ScalarType | ObjectType
    * @throws Exception
    */
-  private function getTypeInstanceForScalar(string $ClassName): ScalarType | ObjectType
+  private function getTypeInstanceForScalar(string $ClassName): ScalarType|ObjectType
   {
-    $typeInstance = $this->getScalarTypeInstanceByName($ClassName);
+    $typeInstance = ObjectToGraphQLHelper::getScalarTypeInstanceByName($ClassName);
     if ($typeInstance) {
       return $typeInstance;
     }
@@ -210,21 +214,9 @@ class ObjectToGraphQL implements HasObjectToGraphQLConstants
     // TODO: add custom exception class
     throw new Exception(
       'Expected builtin scalar type class or custom scalar class that implements '
-      .HasInstance::class
-      .' but received '.$ClassName
+      . HasInstance::class
+      . ' but received ' . $ClassName
     );
-  }
-
-  private function getScalarTypeInstanceByName(string $scalarClassName): ?ScalarType
-  {
-    return match ($scalarClassName) {
-      StringType::class, self::STRING, 'string' => Type::string(),
-      IntType::class, self::INT, 'int' => Type::int(),
-      FloatType::class, self::FLOAT, 'float' => Type::float(),
-      BooleanType::class, self::BOOLEAN, 'boolean' => Type::boolean(),
-      IDType::class, self::ID => Type::id(),
-      default => null,
-    };
   }
 
   /**
@@ -233,8 +225,8 @@ class ObjectToGraphQL implements HasObjectToGraphQLConstants
    * @throws ReflectionException
    * @throws Exception
    */
-  private function getTypeInstanceForNamedType(string $typeName): InputObjectType | ObjectType | ScalarType | Closure
+  private function getTypeInstanceForNamedType(string $typeName): InputObjectType|ObjectType|ScalarType|Closure
   {
-    return $this->getScalarTypeInstanceByName($typeName) ?? $this->getObjectType($typeName);
+    return ObjectToGraphQLHelper::getScalarTypeInstanceByName($typeName) ?? $this->getObjectType($typeName);
   }
 }

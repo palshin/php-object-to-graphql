@@ -19,29 +19,38 @@ composer require epalshin/object-to-graphql
 
 ```php
 
-use Palshin\ObjectToGraphQL;
+use GraphQL\Type\Definition\ObjectType;
+use Palshin\ObjectToGraphQL\ObjectToGraphQL;
 use Palshin\ObjectToGraphQL\Attributes\GraphQLArrayType;
-use Palshin\ObjectToGraphQL\Attributes\GraphQLTypeCategory;
+use Palshin\ObjectToGraphQL\Attributes\GraphQLObjectType;
 
-#[GraphQLTypeCategory(ObjectToGraphQL::INPUT)]
-class ProductCreateDTO {
+#[GraphQLObjectType(typeCategory: ObjectToGraphQL::TYPE_CATEGORY_INPUT)]
+class ProductCreateDTO
+{
   public string $name;
 
   public string $description;
 
   public float $price;
-
-  public int $categoryId;
   
   public bool $isPublic;
 
-  #[GraphQLArrayType(ObjectToGraphQL::STRING)]
+  #[GraphQLArrayType(ObjectToGraphQL::STRING, allowsNull: false)]
   public array $photoUrls;
 
   public ?ProductCategoryCreateDTO $category;
 }
 
-[ $productCreateDto, $productCategoryCreateDto ] = ObjectToGraphQL::getObjectType(ProductCreateDTO::class);
+class ProductCategoryCreateDTO
+{
+  public string $name;
+  
+  public string $description;
+  
+  public int $sortOrder;
+}
+$objectToGraphQL = new ObjectToGraphQL();
+[ $productCreateDto, $productCategoryCreateDto ] = $objectToGraphQL->getObjectTypes(ProductCreateDTO::class);
 
 // and now you can register $objectType in your schema
 $mutationType = new ObjectType([
@@ -59,6 +68,24 @@ $mutationType = new ObjectType([
   ]
 ]);
 
+```
+
+The resulting GraphQL schema will be:
+
+```graphql
+input ProductCreateDTOInput {
+  name: String!
+  description: String!
+  price: Float!
+  isPublic: Boolean!
+  photoUrls: [String!]!
+  category: ProductCategoryCreateDTOInput
+}
+input ProductCategoryCreateDTOInput {
+  name: String!
+  description: String!
+  sortOrder: Int!
+}
 ```
 
 ## Testing
@@ -85,7 +112,10 @@ Please review [our security policy](../../security/policy) on how to report secu
 - [All Contributors](../../contributors)
 
 ## TODO
-- [ ] Add cyclic addition of types to schema
+- [x] Add cyclic addition of types to schema
+- [x] Add processing for union types
+- [ ] Add processing for type category and suffixes parameters passing through attribute
+- [ ] Add strict mode for early error detection
 - [ ] Add custom exceptions
 
 ## License

@@ -7,7 +7,7 @@ namespace Palshin\ObjectToGraphQL\Attributes;
 use Attribute;
 
 #[Attribute(Attribute::TARGET_PROPERTY)]
-class GraphQLArrayType extends GraphQLType
+class GraphQLArrayType
 {
   private GraphQLScalarType $scalarType;
 
