@@ -24,7 +24,7 @@ class GraphQLObjectType
       $this->typeCategory,
       [HasObjectToGraphQLConstants::TYPE_CATEGORY_INPUT, HasObjectToGraphQLConstants::TYPE_CATEGORY_OUTPUT]
     );
-    if (!$isAllowedTypeCategory) {
+    if (! $isAllowedTypeCategory) {
       throw new Exception("Undefined type category for GraphQLObjectType attribute: {$this->typeCategory}");
     }
   }

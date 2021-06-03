@@ -9,6 +9,7 @@ use GraphQL\Type\Definition\BooleanType;
 use GraphQL\Type\Definition\FloatType;
 use GraphQL\Type\Definition\IDType;
 use GraphQL\Type\Definition\IntType;
+use GraphQL\Type\Definition\NullableType;
 use GraphQL\Type\Definition\ScalarType;
 use GraphQL\Type\Definition\StringType;
 use GraphQL\Type\Definition\Type;
@@ -16,7 +17,6 @@ use Palshin\ObjectToGraphQL\Attributes\GraphQLArrayType;
 use Palshin\ObjectToGraphQL\Attributes\GraphQLScalarType;
 use ReflectionNamedType;
 use ReflectionProperty;
-use GraphQL\Type\Definition\NullableType;
 
 abstract class ObjectToGraphQLHelper
 {
@@ -28,9 +28,9 @@ abstract class ObjectToGraphQLHelper
   {
     return count(
       array_filter(
-          $reflectionTypes,
-          fn (ReflectionNamedType $type): bool => $type->allowsNull()
-        )
+        $reflectionTypes,
+        fn (ReflectionNamedType $type): bool => $type->allowsNull()
+      )
     ) !== 0;
   }
 
@@ -42,7 +42,7 @@ abstract class ObjectToGraphQLHelper
   {
     return array_filter(
       $reflectionTypes,
-      fn (ReflectionNamedType $type): bool => !$type->allowsNull()
+      fn (ReflectionNamedType $type): bool => ! $type->allowsNull()
     );
   }
 
@@ -66,9 +66,9 @@ abstract class ObjectToGraphQLHelper
    * @return Type
    */
   public static function wrapNull(
-    Type|Closure $type,
+    Type | Closure $type,
     ReflectionProperty $property,
-    GraphQLScalarType|GraphQLArrayType|null $graphQLType = null
+    GraphQLScalarType | GraphQLArrayType | null $graphQLType = null
   ): Type {
     $allowsNull = $graphQLType?->allowsNull === true || ($property->getType()?->allowsNull() ?? true);
 
