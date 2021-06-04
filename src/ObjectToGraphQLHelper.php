@@ -69,7 +69,7 @@ abstract class ObjectToGraphQLHelper
     Type | Closure $type,
     ReflectionProperty $property,
     GraphQLScalarType | GraphQLArrayType | null $graphQLType = null
-  ): Type|Closure {
+  ): Type | Closure {
     $allowsNull = $graphQLType?->allowsNull === true || ($property->getType()?->allowsNull() ?? true);
 
     return $allowsNull ? $type : Type::nonNull($type);

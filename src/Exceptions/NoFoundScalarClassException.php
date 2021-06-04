@@ -11,8 +11,8 @@ class NoFoundScalarClassException extends Exception
   {
     parent::__construct(
       'Expected builtin scalar type class or custom scalar class that implements '
-      . HasInstance::class
-      . ' but received ' . $ClassName
+      .HasInstance::class
+      .' but received '.$ClassName
     );
   }
 }

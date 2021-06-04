@@ -45,7 +45,7 @@ class ObjectToGraphQL implements HasObjectToGraphQLConstants
    * @throws ReflectionException
    * @throws Exception
    */
-  public function getObjectTypes(string|object $objectOrClass): array
+  public function getObjectTypes(string | object $objectOrClass): array
   {
     $this->getObjectType($objectOrClass);
 
@@ -60,7 +60,7 @@ class ObjectToGraphQL implements HasObjectToGraphQLConstants
    * @throws ReflectionException
    * @throws Exception
    */
-  protected function getObjectType(string|object $objectOrClass): ObjectType|InputObjectType|Closure
+  protected function getObjectType(string | object $objectOrClass): ObjectType | InputObjectType | Closure
   {
     $reflection = new ReflectionClass($objectOrClass);
     $objectType = $reflection->getAttributes(GraphQLObjectType::class)[0] ?? null;
@@ -73,7 +73,7 @@ class ObjectToGraphQL implements HasObjectToGraphQLConstants
     $typeName = $this->getTypeName($objectOrClass, $name, $typeCategory);
     // for cyclic dependencies use deferred field definition, by returning closure
     if (array_key_exists($typeName, $this->typeInstances)) {
-      /**
+      /*
        * @psalm-suppress InvalidReturnStatement
        */
       return $this->typeInstances[$typeName] ?? fn () => $this->typeInstances[$typeName];
@@ -89,7 +89,7 @@ class ObjectToGraphQL implements HasObjectToGraphQLConstants
         $typeField = $this->getTypeField($property);
       } catch (NoFoundGraphQLTypeForPropertyException $exception) {
         throw new NoFoundGraphQLTypeForPropertyException(
-          $reflection->getName() . '->' . $exception->propertyPath
+          $reflection->getName().'->'.$exception->propertyPath
         );
       }
       if ($typeField) {
@@ -117,7 +117,7 @@ class ObjectToGraphQL implements HasObjectToGraphQLConstants
    * @return string
    */
   protected function getTypeName(
-    string|object $objectOrClass,
+    string | object $objectOrClass,
     ?string $name = null,
     string $typeCategory = self::TYPE_CATEGORY_INPUT
   ): string {
@@ -139,7 +139,7 @@ class ObjectToGraphQL implements HasObjectToGraphQLConstants
    * @throws ReflectionException
    * @throws NoFoundScalarClassException
    */
-  protected function getTypeField(ReflectionProperty $property): Type|Closure|null
+  protected function getTypeField(ReflectionProperty $property): Type | Closure | null
   {
     // first case: we have attribute with property definition, so it has highest priority
     $scalarTypeAttribute = $property->getAttributes(GraphQLScalarType::class)[0] ?? null;
@@ -209,7 +209,7 @@ class ObjectToGraphQL implements HasObjectToGraphQLConstants
    * @return ScalarType | ObjectType
    * @throws NoFoundScalarClassException
    */
-  protected function getTypeInstanceForScalar(string $ClassName): ScalarType|ObjectType
+  protected function getTypeInstanceForScalar(string $ClassName): ScalarType | ObjectType
   {
     $typeInstance = ObjectToGraphQLHelper::getScalarTypeInstanceByName($ClassName);
     if ($typeInstance) {
@@ -231,7 +231,7 @@ class ObjectToGraphQL implements HasObjectToGraphQLConstants
    * @throws ReflectionException
    * @throws Exception
    */
-  protected function getTypeInstanceForNamedType(string $typeName): InputObjectType|ObjectType|ScalarType|Closure
+  protected function getTypeInstanceForNamedType(string $typeName): InputObjectType | ObjectType | ScalarType | Closure
   {
     return ObjectToGraphQLHelper::getScalarTypeInstanceByName($typeName) ?? $this->getObjectType($typeName);
   }
