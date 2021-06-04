@@ -1,11 +1,11 @@
 {
-    "name": "palshin/object_to_graphql",
-    "description": "This is my package ObjectToGraphql",
+    "name": "epalshin/object-to-graphql",
+    "description": "Utility helper for generating GraphQL types with webonyx/graphql-php",
     "keywords": [
         "palshin",
         "object_to_graphql"
     ],
-    "homepage": "https://github.com/palshin/object_to_graphql",
+    "homepage": "https://github.com/palshin/php-object-to-graphql",
     "license": "MIT",
     "authors": [
         {
