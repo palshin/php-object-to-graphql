@@ -113,6 +113,7 @@ Please review [our security policy](../../security/policy) on how to report secu
 - [x] Add strict mode for early error detection
 - [x] Add custom exceptions
 - [ ] Write more tests
+- [ ] Add possibility for adding description for generated types
 
 ## License
 
