@@ -114,9 +114,10 @@ Please review [our security policy](../../security/policy) on how to report secu
 ## TODO
 - [x] Add cyclic addition of types to schema
 - [x] Add processing for union types
-- [ ] Add processing for type category and suffixes parameters passing through attribute
-- [ ] Add strict mode for early error detection
-- [ ] Add custom exceptions
+- [x] Add processing for type category and suffixes parameters passing through attribute
+- [x] Add strict mode for early error detection
+- [x] Add custom exceptions
+- [ ] Write more tests
 
 ## License
 

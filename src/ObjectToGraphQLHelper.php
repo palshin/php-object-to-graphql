@@ -63,13 +63,13 @@ abstract class ObjectToGraphQLHelper
    * @param Type|Closure $type
    * @param ReflectionProperty $property
    * @param GraphQLScalarType|GraphQLArrayType|null $graphQLType
-   * @return Type
+   * @return Type|Closure
    */
   public static function wrapNull(
     Type | Closure $type,
     ReflectionProperty $property,
     GraphQLScalarType | GraphQLArrayType | null $graphQLType = null
-  ): Type {
+  ): Type|Closure {
     $allowsNull = $graphQLType?->allowsNull === true || ($property->getType()?->allowsNull() ?? true);
 
     return $allowsNull ? $type : Type::nonNull($type);
