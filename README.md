@@ -1,10 +1,5 @@
 # ObjectToGraphQL
 
-[![Latest Version on Packagist](https://img.shields.io/packagist/v/epalshin/object-to-graphql.svg?style=flat-square)](https://packagist.org/packages/epalshin/object-to-graphql)
-[![GitHub Tests Action Status](https://img.shields.io/github/workflow/status/epalshin/object-to-graphql/run-tests?label=tests)](https://github.com/epalshin/object-to-graphql/actions?query=workflow%3ATests+branch%3Amaster)
-[![GitHub Code Style Action Status](https://img.shields.io/github/workflow/status/epalshin/object-to-graphql/Check%20&%20fix%20styling?label=code%20style)](https://github.com/epalshin/object-to-graphql/actions?query=workflow%3A"Check+%26+fix+styling"+branch%3Amaster)
-[![Total Downloads](https://img.shields.io/packagist/dt/epalshin/object-to-graphql.svg?style=flat-square)](https://packagist.org/packages/epalshin/object-to-graphql)
-
 I noticed that in my own code (I use [Lighthouse PHP](https://github.com/nuwave/lighthouse) for implementation GraphQL API) quite often I first describe the input type in the schema, then I describe the object for this type (DTO). It creates a sense of repetition and makes type system maintenance more difficult, so I decided to add the ability to programmatically generate types for the schema by its type declaration in code. So in my project I expanded [this recommendation](https://lighthouse-php.com/5/digging-deeper/adding-types-programmatically.html#native-php-types) for third case: DTO for custom resolvers.
 
 ## Installation
